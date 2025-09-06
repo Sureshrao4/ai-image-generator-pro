@@ -43,7 +43,7 @@ jobs:
           cp build/app/outputs/flutter-apk/app-release.apk build/output-apk/insta_reels_${VERSION}.apk
 
       - name: Upload APK
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: insta_reels-apk
           path: build/output-apk/*.apk
