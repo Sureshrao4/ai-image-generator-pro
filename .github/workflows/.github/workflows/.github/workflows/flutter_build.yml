@@ -1,0 +1,95 @@
+name: Flutter Android Build & Release
+
+# Trigger workflow on push, PR, or manual trigger
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ github.workspace }}
+
+    env:
+      FLUTTER_VERSION: '3.22.0'  # Set Flutter version here for easy update
+
+    steps:
+      # Checkout the repo
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # Setup Flutter
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+
+      # Cache Flutter dependencies to speed up builds
+      - name: Cache Flutter dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.pub-cache
+          key: ${{ runner.os }}-pub-cache-${{ hashFiles('**/pubspec.yaml') }}
+
+      # Install dependencies with error handling
+      - name: Install dependencies
+        run: flutter pub get
+        continue-on-error: false
+
+      # Run Flutter tests before building
+      - name: Run Flutter Tests
+        run: flutter test
+        continue-on-error: false
+
+      # Auto-bump build number using Git tag + run number
+      - name: Auto-bump build number
+        run: |
+          GIT_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "0.0.0")
+          VERSION="${GIT_TAG}+${{ github.run_number }}"
+          sed -i "s/^version: .*/version: ${VERSION}/" pubspec.yaml
+          echo "Updated pubspec.yaml version to ${VERSION}"
+
+      # Build APK with error handling
+      - name: Build APK
+        run: flutter build apk --release
+        continue-on-error: false
+
+      # Rename APK with version
+      - name: Rename APK with version
+        run: |
+          VERSION=$(grep '^version:' pubspec.yaml | sed 's/version: //')
+          mkdir -p build/output-apk
+          cp build/app/outputs/flutter-apk/app-release.apk build/output-apk/insta_reels_${VERSION}.apk
+
+      # Create GitHub Release and upload APK
+      - name: Create GitHub Release
+        id: create_release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: "v${{ github.run_number }}"
+          name: "insta_reels_v${{ github.run_number }}"
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload APK to Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: build/output-apk/*.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+# Optional: You can add Slack/email notifications after successful or failed builds
+# - name: Notify Slack
+#   uses: slackapi/slack-github-action@v1
+#   with:
+#     channel-id: 'CHANNEL_ID'
+#     text: "Flutter build and release completed!"
+#   env:
+#     SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
