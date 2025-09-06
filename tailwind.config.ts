@@ -26,7 +26,8 @@ export default {
 				foreground: 'hsl(var(--foreground))',
 				primary: {
 					DEFAULT: 'hsl(var(--primary))',
-					foreground: 'hsl(var(--primary-foreground))'
+					foreground: 'hsl(var(--primary-foreground))',
+					glow: 'hsl(var(--primary-glow))'
 				},
 				secondary: {
 					DEFAULT: 'hsl(var(--secondary))',
@@ -61,12 +62,45 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
-				}
+				},
+				// Instagram Creative Colors
+				instagram: {
+					start: 'hsl(var(--instagram-start))',
+					mid: 'hsl(var(--instagram-mid))',
+					end: 'hsl(var(--instagram-end))'
+				},
+				creative: {
+					accent: 'hsl(var(--creative-accent))'
+				},
+				glass: {
+					card: 'hsl(var(--glass-card))',
+					border: 'hsl(var(--glass-border))'
+				},
+				success: 'hsl(var(--success))',
+				warning: 'hsl(var(--warning))'
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
 				md: 'calc(var(--radius) - 2px)',
-				sm: 'calc(var(--radius) - 4px)'
+				sm: 'calc(var(--radius) - 4px)',
+				'xl': 'var(--radius-xl)'
+			},
+			boxShadow: {
+				'glow': 'var(--shadow-glow)',
+				'creative': 'var(--shadow-creative)',
+				'glass': 'var(--shadow-glass)'
+			},
+			backgroundImage: {
+				'gradient-instagram': 'var(--gradient-instagram)',
+				'gradient-creative': 'var(--gradient-creative)',
+				'gradient-glass': 'var(--gradient-glass)'
+			},
+			animation: {
+				'glow': 'glow 2s ease-in-out infinite alternate',
+				'float': 'float 3s ease-in-out infinite',
+				'slide-up': 'slideUp 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55)',
+				'accordion-down': 'accordion-down 0.2s ease-out',
+				'accordion-up': 'accordion-up 0.2s ease-out'
 			},
 			keyframes: {
 				'accordion-down': {

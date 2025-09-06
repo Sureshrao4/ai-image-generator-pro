@@ -2,41 +2,72 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+/* Instagram Reel Generator Design System - Modern, Creative, Instagram-Inspired */
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* Core Background System */
+    --background: 222 84% 4.9%;
+    --foreground: 210 40% 98%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    /* Card System with Glassmorphism */
+    --card: 222 84% 8%;
+    --card-foreground: 210 40% 95%;
+    --glass-card: 222 84% 12%;
+    --glass-border: 270 100% 80%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-
-    --primary: 222.2 47.4% 11.2%;
+    /* Instagram Gradient System */
+    --instagram-start: 270 100% 70%;
+    --instagram-mid: 315 100% 65%; 
+    --instagram-end: 45 100% 60%;
+    
+    /* Primary Brand Colors */
+    --primary: 270 100% 70%;
     --primary-foreground: 210 40% 98%;
+    --primary-glow: 270 100% 80%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    /* Creative Secondary System */
+    --secondary: 222 84% 15%;
+    --secondary-foreground: 210 40% 95%;
+    --creative-accent: 315 100% 65%;
+    
+    /* Interface Colors */
+    --muted: 222 40% 20%;
+    --muted-foreground: 215 20% 65%;
+    --accent: 270 100% 70%;
+    --accent-foreground: 210 40% 98%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-
-    --destructive: 0 84.2% 60.2%;
+    /* Status Colors */
+    --destructive: 0 84% 60%;
     --destructive-foreground: 210 40% 98%;
+    --success: 120 100% 40%;
+    --warning: 45 100% 50%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    /* Form Elements */
+    --border: 222 40% 25%;
+    --input: 222 40% 15%;
+    --ring: 270 100% 70%;
 
-    --radius: 0.5rem;
+    /* Design Tokens */
+    --radius: 0.75rem;
+    --radius-lg: 1rem;
+    --radius-xl: 1.5rem;
+
+    /* Instagram Gradients */
+    --gradient-instagram: linear-gradient(135deg, hsl(var(--instagram-start)), hsl(var(--instagram-mid)), hsl(var(--instagram-end)));
+    --gradient-creative: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--creative-accent)));
+    --gradient-glass: linear-gradient(135deg, hsl(var(--glass-card) / 0.3), hsl(var(--glass-card) / 0.1));
+    
+    /* Shadows & Effects */
+    --shadow-glow: 0 0 40px hsl(var(--primary-glow) / 0.3);
+    --shadow-creative: 0 10px 40px -10px hsl(var(--primary) / 0.4);
+    --shadow-glass: 0 8px 32px hsl(222 84% 4.9% / 0.3);
+
+    /* Animations */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+    --radius: 0.75rem;
 
     --sidebar-background: 0 0% 98%;
 
@@ -101,5 +132,87 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+    background: linear-gradient(135deg, hsl(var(--background)), hsl(222 84% 6%));
+    min-height: 100vh;
+  }
+}
+
+/* Instagram Reel Generator Utilities */
+@layer utilities {
+  /* Glassmorphism Effects */
+  .glass-card {
+    background: var(--gradient-glass);
+    backdrop-filter: blur(20px);
+    border: 1px solid hsl(var(--glass-border) / 0.2);
+    box-shadow: var(--shadow-glass);
+  }
+
+  /* Instagram Gradients */
+  .gradient-instagram {
+    background: var(--gradient-instagram);
+  }
+  
+  .gradient-creative {
+    background: var(--gradient-creative);
+  }
+
+  /* Creative Animations */
+  .animate-glow {
+    animation: glow 2s ease-in-out infinite alternate;
+  }
+
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+
+  .animate-slide-up {
+    animation: slideUp 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  }
+
+  /* Hover Effects */
+  .hover-lift {
+    transition: var(--transition-smooth);
+  }
+  
+  .hover-lift:hover {
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: var(--shadow-creative);
+  }
+
+  /* Creative Borders */
+  .border-gradient {
+    border: 2px solid transparent;
+    background: linear-gradient(hsl(var(--card)), hsl(var(--card))) padding-box,
+                var(--gradient-instagram) border-box;
+  }
+}
+
+/* Creative Keyframes */
+@keyframes glow {
+  from {
+    box-shadow: 0 0 20px hsl(var(--primary) / 0.5);
+  }
+  to {
+    box-shadow: 0 0 40px hsl(var(--primary) / 0.8), 0 0 60px hsl(var(--creative-accent) / 0.4);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }

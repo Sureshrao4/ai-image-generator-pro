@@ -18,11 +18,18 @@ const buttonVariants = cva(
           "bg-secondary text-secondary-foreground hover:bg-secondary/80",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
+        // Instagram-style gradient variants
+        instagram: "bg-gradient-instagram text-white hover:opacity-90 hover:shadow-glow transition-all duration-300",
+        creative: "bg-gradient-creative text-white hover:opacity-90 hover:shadow-creative transition-all duration-300",
+        glass: "glass-card text-foreground hover:bg-glass-card/80 backdrop-blur-xl",
+        // Border gradient variant for outlined buttons with gradient borders
+        "border-gradient": "bg-transparent text-foreground border-2 border-transparent bg-gradient-to-r from-instagram-start via-instagram-mid to-instagram-end bg-clip-border hover:shadow-glow transition-all duration-300 [background-clip:padding-box,border-box] [background-origin:border-box] [background-image:linear-gradient(hsl(var(--card)),hsl(var(--card))),var(--gradient-instagram)]",
       },
       size: {
         default: "h-10 px-4 py-2",
         sm: "h-9 rounded-md px-3",
-        lg: "h-11 rounded-md px-8",
+        lg: "h-11 rounded-md px-8 text-base",
+        xl: "h-14 rounded-lg px-12 text-lg",
         icon: "h-10 w-10",
       },
     },
