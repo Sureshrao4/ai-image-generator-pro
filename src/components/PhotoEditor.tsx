@@ -23,13 +23,47 @@ interface PhotoEditorProps {
   onPhotoEdited: (photo: Photo) => void;
 }
 
-const FILTER_PRESETS = [
-  { name: "Original", brightness: 100, contrast: 100, saturation: 100, blur: 0 },
-  { name: "Vibrant", brightness: 110, contrast: 120, saturation: 130, blur: 0 },
-  { name: "Vintage", brightness: 95, contrast: 110, saturation: 80, blur: 0 },
-  { name: "B&W", brightness: 100, contrast: 120, saturation: 0, blur: 0 },
-  { name: "Dreamy", brightness: 105, contrast: 90, saturation: 110, blur: 1 },
-  { name: "Drama", brightness: 90, contrast: 140, saturation: 120, blur: 0 },
+const STYLE_PRESETS = [
+  { 
+    name: "Original", 
+    brightness: 100, contrast: 100, saturation: 100, blur: 0,
+    description: "No filters applied"
+  },
+  { 
+    name: "Instagram", 
+    brightness: 108, contrast: 115, saturation: 125, blur: 0,
+    description: "Bright & punchy like social media"
+  },
+  { 
+    name: "Vintage", 
+    brightness: 95, contrast: 110, saturation: 75, blur: 0,
+    description: "Warm retro film look"
+  },
+  { 
+    name: "Cinematic", 
+    brightness: 90, contrast: 140, saturation: 110, blur: 0,
+    description: "Movie-style dramatic lighting"
+  },
+  { 
+    name: "Dreamy", 
+    brightness: 110, contrast: 85, saturation: 120, blur: 0.8,
+    description: "Soft ethereal glow"
+  },
+  { 
+    name: "B&W Classic", 
+    brightness: 105, contrast: 130, saturation: 0, blur: 0,
+    description: "High contrast monochrome"
+  },
+  { 
+    name: "Sunset", 
+    brightness: 115, contrast: 120, saturation: 140, blur: 0,
+    description: "Warm golden hour vibes"
+  },
+  { 
+    name: "Arctic", 
+    brightness: 120, contrast: 95, saturation: 80, blur: 0,
+    description: "Cool blue-tinted aesthetic"
+  },
 ];
 
 export const PhotoEditor = ({ 
@@ -51,7 +85,7 @@ export const PhotoEditor = ({
     }
   }, [selectedPhoto]);
 
-  const applyPreset = (preset: typeof FILTER_PRESETS[0]) => {
+  const applyPreset = (preset: typeof STYLE_PRESETS[0]) => {
     const newFilters = {
       brightness: preset.brightness,
       contrast: preset.contrast,
@@ -60,7 +94,9 @@ export const PhotoEditor = ({
     };
     setFilters(newFilters);
     saveChanges(newFilters);
-    toast.success(`${preset.name} filter applied!`);
+    toast.success(`${preset.name} style applied!`, {
+      description: preset.description
+    });
   };
 
   const resetFilters = () => {
@@ -175,19 +211,25 @@ export const PhotoEditor = ({
 
           {/* Controls */}
           <div className="space-y-6">
-            {/* Filter Presets */}
+            {/* Style Presets */}
             <Card className="p-4 glass-card">
-              <h4 className="font-semibold mb-3">Quick Filters</h4>
-              <div className="grid grid-cols-2 gap-2">
-                {FILTER_PRESETS.map((preset) => (
+              <h4 className="font-semibold mb-3 flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-primary" />
+                Auto Style Presets
+              </h4>
+              <div className="grid grid-cols-1 gap-2">
+                {STYLE_PRESETS.map((preset) => (
                   <Button
                     key={preset.name}
                     onClick={() => applyPreset(preset)}
                     variant="outline"
                     size="sm"
-                    className="hover-lift"
+                    className="hover-lift text-left justify-start h-auto p-3"
                   >
-                    {preset.name}
+                    <div>
+                      <div className="font-medium">{preset.name}</div>
+                      <div className="text-xs text-muted-foreground">{preset.description}</div>
+                    </div>
                   </Button>
                 ))}
               </div>

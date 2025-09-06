@@ -22,11 +22,19 @@ interface ReelPreviewProps {
 }
 
 const TRANSITIONS = [
-  { id: 'fade', name: 'Fade', icon: '✨' },
-  { id: 'slide', name: 'Slide', icon: '➡️' },
-  { id: 'zoom', name: 'Zoom', icon: '🔍' },
-  { id: 'flip', name: 'Flip', icon: '🔄' },
-  { id: 'ken-burns', name: 'Ken Burns', icon: '📸' },
+  { id: 'fade', name: 'Fade', icon: '✨', description: 'Smooth opacity transition' },
+  { id: 'slide-left', name: 'Slide Left', icon: '⬅️', description: 'Slides from right to left' },
+  { id: 'slide-right', name: 'Slide Right', icon: '➡️', description: 'Slides from left to right' },
+  { id: 'slide-up', name: 'Slide Up', icon: '⬆️', description: 'Slides from bottom to top' },
+  { id: 'slide-down', name: 'Slide Down', icon: '⬇️', description: 'Slides from top to bottom' },
+  { id: 'zoom-in', name: 'Zoom In', icon: '🔍', description: 'Scales in from small to large' },
+  { id: 'zoom-out', name: 'Zoom Out', icon: '🔎', description: 'Scales out from large to small' },
+  { id: 'flip-horizontal', name: 'Flip H', icon: '🔄', description: 'Horizontal flip transition' },
+  { id: 'flip-vertical', name: 'Flip V', icon: '🔃', description: 'Vertical flip transition' },
+  { id: 'ken-burns', name: 'Ken Burns', icon: '📸', description: 'Slow zoom with pan effect' },
+  { id: 'swirl', name: 'Swirl', icon: '🌀', description: 'Rotating spiral transition' },
+  { id: 'cross-dissolve', name: 'Cross Dissolve', icon: '💫', description: 'Blended fade transition' },
+  { id: 'auto-mix', name: 'Auto Mix', icon: '🎯', description: 'Different transition each time' },
 ];
 
 const DURATIONS = [
@@ -39,9 +47,10 @@ const DURATIONS = [
 export const ReelPreview = ({ photos, isVisible }: ReelPreviewProps) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [selectedTransition, setSelectedTransition] = useState('fade');
+  const [selectedTransition, setSelectedTransition] = useState('auto-mix');
   const [photoDuration, setPhotoDuration] = useState('1');
   const [progress, setProgress] = useState(0);
+  const [currentTransitionType, setCurrentTransitionType] = useState('fade');
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -52,6 +61,15 @@ export const ReelPreview = ({ photos, isVisible }: ReelPreviewProps) => {
       interval = setInterval(() => {
         setProgress(prev => {
           if (prev >= 100) {
+            // Change transition type for auto-mix mode
+            if (selectedTransition === 'auto-mix') {
+              const availableTransitions = TRANSITIONS.filter(t => t.id !== 'auto-mix');
+              const randomTransition = availableTransitions[Math.floor(Math.random() * availableTransitions.length)];
+              setCurrentTransitionType(randomTransition.id);
+            } else {
+              setCurrentTransitionType(selectedTransition);
+            }
+            
             setCurrentIndex(current => 
               current >= photos.length - 1 ? 0 : current + 1
             );
@@ -78,17 +96,50 @@ export const ReelPreview = ({ photos, isVisible }: ReelPreviewProps) => {
   };
 
   const getTransitionClass = () => {
-    switch (selectedTransition) {
-      case 'slide':
-        return 'transition-transform duration-500 ease-in-out';
-      case 'zoom':
-        return 'transition-all duration-500 ease-in-out hover:scale-110';
-      case 'flip':
-        return 'transition-transform duration-500 ease-in-out';
+    const transitionType = selectedTransition === 'auto-mix' ? currentTransitionType : selectedTransition;
+    
+    switch (transitionType) {
+      case 'slide-left':
+        return 'transition-all duration-500 ease-in-out transform-gpu';
+      case 'slide-right':
+        return 'transition-all duration-500 ease-in-out transform-gpu';
+      case 'slide-up':
+        return 'transition-all duration-500 ease-in-out transform-gpu';
+      case 'slide-down':
+        return 'transition-all duration-500 ease-in-out transform-gpu';
+      case 'zoom-in':
+        return 'transition-all duration-700 ease-out transform-gpu';
+      case 'zoom-out':
+        return 'transition-all duration-700 ease-out transform-gpu';
+      case 'flip-horizontal':
+        return 'transition-transform duration-600 ease-in-out transform-gpu';
+      case 'flip-vertical':
+        return 'transition-transform duration-600 ease-in-out transform-gpu';
       case 'ken-burns':
-        return 'transition-all duration-1000 ease-in-out animate-pulse';
-      default:
+        return 'transition-all duration-1000 ease-in-out transform-gpu animate-pulse';
+      case 'swirl':
+        return 'transition-all duration-800 ease-in-out transform-gpu';
+      case 'cross-dissolve':
+        return 'transition-all duration-600 ease-in-out';
+      default: // fade
         return 'transition-opacity duration-500 ease-in-out';
+    }
+  };
+
+  const getTransitionStyle = () => {
+    const transitionType = selectedTransition === 'auto-mix' ? currentTransitionType : selectedTransition;
+    
+    switch (transitionType) {
+      case 'zoom-in':
+        return { transform: 'scale(1.05)' };
+      case 'zoom-out':
+        return { transform: 'scale(0.95)' };
+      case 'ken-burns':
+        return { 
+          transform: `scale(1.1) translate(${Math.sin(Date.now() / 3000) * 2}px, ${Math.cos(Date.now() / 3000) * 2}px)` 
+        };
+      default:
+        return {};
     }
   };
 
@@ -138,10 +189,10 @@ export const ReelPreview = ({ photos, isVisible }: ReelPreviewProps) => {
             <div className="aspect-[9/16] rounded-[2rem] overflow-hidden bg-background relative border-gradient">
               {currentPhoto && (
                 <img
-                  key={currentPhoto.id}
+                  key={`${currentPhoto.id}-${currentTransitionType}`}
                   src={currentPhoto.url}
                   alt={`Photo ${currentIndex + 1}`}
-                  style={getFilterStyle(currentPhoto)}
+                  style={{ ...getFilterStyle(currentPhoto), ...getTransitionStyle() }}
                   className={`w-full h-full object-cover ${getTransitionClass()}`}
                 />
               )}
@@ -222,22 +273,30 @@ export const ReelPreview = ({ photos, isVisible }: ReelPreviewProps) => {
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <label className="text-sm font-medium">Transition Effect</label>
+            <label className="text-sm font-medium">Transition Mode</label>
             <Select value={selectedTransition} onValueChange={setSelectedTransition}>
               <SelectTrigger className="glass-card">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="max-h-60">
                 {TRANSITIONS.map((transition) => (
                   <SelectItem key={transition.id} value={transition.id}>
-                    <span className="flex items-center gap-2">
-                      <span>{transition.icon}</span>
-                      {transition.name}
-                    </span>
+                    <div className="flex items-start gap-2">
+                      <span className="text-base">{transition.icon}</span>
+                      <div>
+                        <div className="font-medium">{transition.name}</div>
+                        <div className="text-xs text-muted-foreground">{transition.description}</div>
+                      </div>
+                    </div>
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
+            {selectedTransition === 'auto-mix' && (
+              <p className="text-xs text-muted-foreground">
+                Currently using: <span className="font-medium text-primary">{TRANSITIONS.find(t => t.id === currentTransitionType)?.name}</span>
+              </p>
+            )}
           </div>
           
           <div className="space-y-2">
