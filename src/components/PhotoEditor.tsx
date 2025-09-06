@@ -11,10 +11,13 @@ import {
   Focus,
   RotateCcw,
   Save,
-  Sparkles
+  Sparkles,
+  Brain
 } from "lucide-react";
 import { toast } from "sonner";
+import { AIEnhancer } from "@/components/AIEnhancer";
 import type { Photo } from "@/pages/Index";
+import type { AIFilters } from "@/lib/ai/imageAnalysis";
 
 interface PhotoEditorProps {
   photos: Photo[];
@@ -78,6 +81,7 @@ export const PhotoEditor = ({
     saturation: 100,
     blur: 0,
   });
+  const [showAI, setShowAI] = useState(false);
 
   useEffect(() => {
     if (selectedPhoto?.filters) {
@@ -123,6 +127,11 @@ export const PhotoEditor = ({
     onPhotoEdited(editedPhoto);
   };
 
+  const handleAIFiltersApplied = (aiFilters: AIFilters) => {
+    setFilters(aiFilters);
+    saveChanges(aiFilters);
+  };
+
   const getFilterStyle = (photo: Photo) => {
     const f = photo.filters || filters;
     return {
@@ -160,9 +169,20 @@ export const PhotoEditor = ({
             <Palette className="w-5 h-5 text-primary" />
             Photo Editor
           </h3>
-          <Badge variant="secondary" className="animate-glow">
-            {photos.length} Photos
-          </Badge>
+          <div className="flex items-center gap-2">
+            <Button
+              onClick={() => setShowAI(!showAI)}
+              variant={showAI ? "creative" : "outline"}
+              size="sm"
+              className="hover-lift"
+            >
+              <Brain className="w-4 h-4 mr-2" />
+              AI Enhance
+            </Button>
+            <Badge variant="secondary" className="animate-glow">
+              {photos.length} Photos
+            </Badge>
+          </div>
         </div>
 
         <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
@@ -193,6 +213,16 @@ export const PhotoEditor = ({
           ))}
         </div>
       </Card>
+
+      {/* AI Enhancement Panel */}
+      {showAI && (
+        <AIEnhancer
+          photos={photos}
+          selectedPhoto={selectedPhoto}
+          onPhotoEnhanced={onPhotoEdited}
+          onStyleApplied={handleAIFiltersApplied}
+        />
+      )}
 
       {/* Editor Panel */}
       {selectedPhoto && (

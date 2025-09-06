@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -12,9 +12,14 @@ import {
   Settings,
   Smartphone,
   Clock,
-  Zap
+  Zap,
+  Brain,
+  Loader2
 } from "lucide-react";
+import { toast } from "sonner";
+import { openaiVision } from "@/lib/ai/openaiVision";
 import type { Photo } from "@/pages/Index";
+import type { TransitionRecommendation } from "@/lib/ai/openaiVision";
 
 interface ReelPreviewProps {
   photos: Photo[];
@@ -35,6 +40,7 @@ const TRANSITIONS = [
   { id: 'swirl', name: 'Swirl', icon: '🌀', description: 'Rotating spiral transition' },
   { id: 'cross-dissolve', name: 'Cross Dissolve', icon: '💫', description: 'Blended fade transition' },
   { id: 'auto-mix', name: 'Auto Mix', icon: '🎯', description: 'Different transition each time' },
+  { id: 'ai-smart', name: 'AI Smart', icon: '🧠', description: 'AI-recommended transitions based on content' },
 ];
 
 const DURATIONS = [
@@ -51,6 +57,9 @@ export const ReelPreview = ({ photos, isVisible }: ReelPreviewProps) => {
   const [photoDuration, setPhotoDuration] = useState('1');
   const [progress, setProgress] = useState(0);
   const [currentTransitionType, setCurrentTransitionType] = useState('fade');
+  const [aiRecommendation, setAiRecommendation] = useState<TransitionRecommendation | null>(null);
+  const [isLoadingAI, setIsLoadingAI] = useState(false);
+  const intervalRef = useRef<NodeJS.Timeout>();
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -63,9 +72,13 @@ export const ReelPreview = ({ photos, isVisible }: ReelPreviewProps) => {
           if (prev >= 100) {
             // Change transition type for auto-mix mode
             if (selectedTransition === 'auto-mix') {
-              const availableTransitions = TRANSITIONS.filter(t => t.id !== 'auto-mix');
+              const availableTransitions = TRANSITIONS.filter(t => t.id !== 'auto-mix' && t.id !== 'ai-smart');
               const randomTransition = availableTransitions[Math.floor(Math.random() * availableTransitions.length)];
               setCurrentTransitionType(randomTransition.id);
+            } else if (selectedTransition === 'ai-smart' && aiRecommendation) {
+              const aiTransitions = aiRecommendation.transitions;
+              const nextTransition = aiTransitions[currentIndex % aiTransitions.length];
+              setCurrentTransitionType(nextTransition);
             } else {
               setCurrentTransitionType(selectedTransition);
             }
@@ -81,7 +94,40 @@ export const ReelPreview = ({ photos, isVisible }: ReelPreviewProps) => {
     }
 
     return () => clearInterval(interval);
-  }, [isPlaying, currentIndex, photos.length, photoDuration]);
+  }, [isPlaying, currentIndex, photos.length, photoDuration, selectedTransition, aiRecommendation]);
+
+  const generateAITransitions = async () => {
+    if (photos.length < 2) {
+      toast.error('Need at least 2 photos for AI transition recommendations');
+      return;
+    }
+
+    const apiKey = localStorage.getItem('openai-api-key');
+    if (!apiKey) {
+      toast.error('OpenAI API key required for AI recommendations. Add it in the Photo Editor.');
+      return;
+    }
+
+    setIsLoadingAI(true);
+    try {
+      openaiVision.setApiKey(apiKey);
+      const imageUrls = photos.map(p => p.url);
+      const recommendation = await openaiVision.recommendTransitions(imageUrls);
+      
+      setAiRecommendation(recommendation);
+      setPhotoDuration((recommendation.timing / 1000).toString());
+      setSelectedTransition('ai-smart');
+      
+      toast.success('AI transitions generated!', {
+        description: recommendation.reasoning
+      });
+    } catch (error) {
+      console.error('AI transition generation failed:', error);
+      toast.error('Failed to generate AI transitions');
+    } finally {
+      setIsLoadingAI(false);
+    }
+  };
 
   const getFilterStyle = (photo: Photo) => {
     const f = photo.filters || { brightness: 100, contrast: 100, saturation: 100, blur: 0 };
@@ -172,6 +218,20 @@ export const ReelPreview = ({ photos, isVisible }: ReelPreviewProps) => {
             Reel Preview
           </h3>
           <div className="flex items-center gap-2">
+            <Button
+              onClick={generateAITransitions}
+              disabled={isLoadingAI || photos.length < 2}
+              variant="outline"
+              size="sm"
+              className="hover-lift"
+            >
+              {isLoadingAI ? (
+                <Loader2 className="w-4 h-4 animate-spin mr-2" />
+              ) : (
+                <Brain className="w-4 h-4 mr-2" />
+              )}
+              AI Transitions
+            </Button>
             <Badge variant="secondary" className="animate-glow">
               <Clock className="w-3 h-3 mr-1" />
               {totalDuration}s
@@ -296,6 +356,12 @@ export const ReelPreview = ({ photos, isVisible }: ReelPreviewProps) => {
               <p className="text-xs text-muted-foreground">
                 Currently using: <span className="font-medium text-primary">{TRANSITIONS.find(t => t.id === currentTransitionType)?.name}</span>
               </p>
+            )}
+            {selectedTransition === 'ai-smart' && aiRecommendation && (
+              <div className="text-xs text-muted-foreground">
+                <p>AI recommended: <span className="font-medium text-primary">{aiRecommendation.transitions.join(', ')}</span></p>
+                <p className="mt-1">{aiRecommendation.reasoning}</p>
+              </div>
             )}
           </div>
           
