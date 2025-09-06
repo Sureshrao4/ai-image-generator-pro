@@ -10,6 +10,9 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ github.workspace }}
 
     steps:
       - name: Checkout repository
@@ -22,14 +25,25 @@ jobs:
 
       - name: Install dependencies
         run: flutter pub get
-        working-directory: .
+
+      - name: Auto-bump build number
+        run: |
+          VERSION=$(grep '^version:' pubspec.yaml | sed 's/version: //;s/+.*//')
+          NEW_VERSION="${VERSION}+${{ github.run_number }}"
+          sed -i "s/^version: .*/version: ${NEW_VERSION}/" pubspec.yaml
+          echo "Updated pubspec.yaml version to ${NEW_VERSION}"
 
       - name: Build APK
         run: flutter build apk --release
-        working-directory: .
+
+      - name: Rename APK with version
+        run: |
+          VERSION=$(grep '^version:' pubspec.yaml | sed 's/version: //')
+          mkdir -p build/output-apk
+          cp build/app/outputs/flutter-apk/app-release.apk build/output-apk/insta_reels_${VERSION}.apk
 
       - name: Upload APK
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v3
         with:
-          name: insta_reels_builder-apk
-          path: build/app/outputs/flutter-apk/app-release.apk
+          name: insta_reels-apk
+          path: build/output-apk/*.apk
