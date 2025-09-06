@@ -1,4 +1,4 @@
-name: Flutter Android Build
+name: Flutter Android Build & Release
 
 on:
   push:
@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ${{ github.workspace }}
+        working-directory: ${{ github.workspace }}/photoflix-magic
 
     steps:
       - name: Checkout repository
@@ -42,8 +42,26 @@ jobs:
           mkdir -p build/output-apk
           cp build/app/outputs/flutter-apk/app-release.apk build/output-apk/insta_reels_${VERSION}.apk
 
-      - name: Upload APK
+      - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: insta_reels-apk
           path: build/output-apk/*.apk
+
+      - name: Create GitHub Release
+        id: create_release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: "v${{ github.run_number }}"
+          name: "insta_reels_v${{ github.run_number }}"
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload APK to Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: build/output-apk/*.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
