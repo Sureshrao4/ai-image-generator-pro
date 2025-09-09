@@ -19,11 +19,14 @@ import {
 import { toast } from "sonner";
 import { openaiVision } from "@/lib/ai/openaiVision";
 import type { Photo } from "@/pages/Index";
+import type { VideoFile } from "@/components/VideoEditor";
 import type { TransitionRecommendation } from "@/lib/ai/openaiVision";
 
 interface ReelPreviewProps {
   photos: Photo[];
+  videos: VideoFile[];
   isVisible: boolean;
+  mode: 'photo' | 'video';
 }
 
 const TRANSITIONS = [
@@ -50,7 +53,7 @@ const DURATIONS = [
   { value: '2', label: '2s - Cinematic' },
 ];
 
-export const ReelPreview = ({ photos, isVisible }: ReelPreviewProps) => {
+export const ReelPreview = ({ photos, videos, isVisible, mode }: ReelPreviewProps) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedTransition, setSelectedTransition] = useState('auto-mix');
@@ -63,8 +66,9 @@ export const ReelPreview = ({ photos, isVisible }: ReelPreviewProps) => {
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
+    const contentLength = mode === 'photo' ? photos.length : videos.length;
     
-    if (isPlaying && photos.length > 0) {
+    if (isPlaying && contentLength > 0) {
       const duration = parseFloat(photoDuration) * 1000;
       
       interval = setInterval(() => {
@@ -84,7 +88,7 @@ export const ReelPreview = ({ photos, isVisible }: ReelPreviewProps) => {
             }
             
             setCurrentIndex(current => 
-              current >= photos.length - 1 ? 0 : current + 1
+              current >= contentLength - 1 ? 0 : current + 1
             );
             return 0;
           }
@@ -94,11 +98,12 @@ export const ReelPreview = ({ photos, isVisible }: ReelPreviewProps) => {
     }
 
     return () => clearInterval(interval);
-  }, [isPlaying, currentIndex, photos.length, photoDuration, selectedTransition, aiRecommendation]);
+  }, [isPlaying, currentIndex, photos.length, videos.length, photoDuration, selectedTransition, aiRecommendation, mode]);
 
   const generateAITransitions = async () => {
-    if (photos.length < 2) {
-      toast.error('Need at least 2 photos for AI transition recommendations');
+    const contentLength = mode === 'photo' ? photos.length : videos.length;
+    if (contentLength < 2) {
+      toast.error(`Need at least 2 ${mode === 'photo' ? 'photos' : 'videos'} for AI transition recommendations`);
       return;
     }
 
@@ -189,7 +194,9 @@ export const ReelPreview = ({ photos, isVisible }: ReelPreviewProps) => {
     }
   };
 
-  if (!isVisible || photos.length === 0) {
+  const contentLength = mode === 'photo' ? photos.length : videos.length;
+  
+  if (!isVisible || contentLength === 0) {
     return (
       <Card className="p-8 glass-card">
         <div className="text-center space-y-4">
@@ -198,15 +205,16 @@ export const ReelPreview = ({ photos, isVisible }: ReelPreviewProps) => {
           </div>
           <h3 className="text-lg font-semibold">Reel Preview</h3>
           <p className="text-muted-foreground">
-            Upload and edit photos to see your reel preview
+            Upload and edit {mode === 'photo' ? 'photos' : 'videos'} to see your reel preview
           </p>
         </div>
       </Card>
     );
   }
 
-  const currentPhoto = photos[currentIndex];
-  const totalDuration = photos.length * parseFloat(photoDuration);
+  const currentPhoto = mode === 'photo' ? photos[currentIndex] : null;
+  const currentVideo = mode === 'video' ? videos[currentIndex] : null;
+  const totalDuration = contentLength * parseFloat(photoDuration);
 
   return (
     <div className="space-y-6">
@@ -220,7 +228,7 @@ export const ReelPreview = ({ photos, isVisible }: ReelPreviewProps) => {
           <div className="flex items-center gap-2">
             <Button
               onClick={generateAITransitions}
-              disabled={isLoadingAI || photos.length < 2}
+              disabled={isLoadingAI || contentLength < 2}
               variant="outline"
               size="sm"
               className="hover-lift"
@@ -237,7 +245,7 @@ export const ReelPreview = ({ photos, isVisible }: ReelPreviewProps) => {
               {totalDuration}s
             </Badge>
             <Badge variant="outline">
-              {currentIndex + 1}/{photos.length}
+              {currentIndex + 1}/{contentLength}
             </Badge>
           </div>
         </div>
@@ -247,7 +255,7 @@ export const ReelPreview = ({ photos, isVisible }: ReelPreviewProps) => {
           <div className="relative bg-black rounded-[2.5rem] p-2 shadow-creative">
             {/* Screen */}
             <div className="aspect-[9/16] rounded-[2rem] overflow-hidden bg-background relative border-gradient">
-              {currentPhoto && (
+              {mode === 'photo' && currentPhoto && (
                 <img
                   key={`${currentPhoto.id}-${currentTransitionType}`}
                   src={currentPhoto.url}
@@ -256,11 +264,21 @@ export const ReelPreview = ({ photos, isVisible }: ReelPreviewProps) => {
                   className={`w-full h-full object-cover ${getTransitionClass()}`}
                 />
               )}
+              {mode === 'video' && currentVideo && (
+                <video
+                  key={`${currentVideo.id}-${currentTransitionType}`}
+                  src={currentVideo.url}
+                  autoPlay
+                  muted
+                  loop
+                  className={`w-full h-full object-cover ${getTransitionClass()}`}
+                />
+              )}
               
               {/* Progress Bar */}
               <div className="absolute top-4 left-4 right-4">
                 <div className="flex gap-1">
-                  {photos.map((_, index) => (
+                  {Array.from({ length: contentLength }).map((_, index) => (
                     <div key={index} className="flex-1 h-1 bg-white/30 rounded-full overflow-hidden">
                       <div 
                         className="h-full bg-white transition-all duration-100"
@@ -313,10 +331,10 @@ export const ReelPreview = ({ photos, isVisible }: ReelPreviewProps) => {
           </Button>
           
           <Button
-            onClick={() => setCurrentIndex(Math.min(photos.length - 1, currentIndex + 1))}
+            onClick={() => setCurrentIndex(Math.min(contentLength - 1, currentIndex + 1))}
             variant="outline"
             size="sm"
-            disabled={currentIndex === photos.length - 1}
+            disabled={currentIndex === contentLength - 1}
             className="hover-lift"
           >
             <SkipForward className="w-4 h-4" />
