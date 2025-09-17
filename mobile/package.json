@@ -1,0 +1,13 @@
+{
+  "name": "ai-image-generator-mobile",
+  "version": "1.0.0",
+  "main": "expo-router/entry",
+  "scripts": {
+    "start": "expo start"
+  },
+  "dependencies": {
+    "expo": "~49.0.15",
+    "react": "18.2.0",
+    "react-native": "0.72.6"
+  }
+}
