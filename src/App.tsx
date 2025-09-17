@@ -1,35 +1,40 @@
-import { useState } from "react";
+import React, { useState } from 'react';
 
-export default function Index() {
-  const [prompt, setPrompt] = useState("");
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
+function App() {
+  const [prompt, setPrompt] = useState('');
+  const [imageUrl, setImageUrl] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   const generateImage = async () => {
+    if (!prompt.trim()) return;
     setIsLoading(true);
+
     try {
-      const response = await fetch("/api/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt }),
+      // First, check generations (simulate)
+      const checkRes = await fetch('https://photoflix-magic.onrender.com/api/flux/check-generations');
+      const checkData = await checkRes.json();
+      if (checkData.remaining <= 0) {
+        alert('No generations left!');
+        setIsLoading(false);
+        return;
+      }
+
+      // Then generate image
+      const response = await fetch('https://photoflix-magic.onrender.com/api/ai/generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ prompt })
       });
 
-      if (!response.ok) {
-        throw new Error(`API request failed with status ${response.status}`);
-      }
-
       const data = await response.json();
-
-      if (!data.images || data.images.length === 0) {
-        throw new Error("No images returned from API");
-      }
-
       setImageUrl(data.images[0]);
     } catch (err) {
       if (err instanceof Error) {
-        alert("Failed: " + err.message);
+        alert('Failed: ' + err.message);
       } else {
-        alert("Failed: " + String(err));
+        alert('Failed: Unknown error');
       }
     } finally {
       setIsLoading(false);
@@ -37,30 +42,26 @@ export default function Index() {
   };
 
   return (
-    <div style={{ padding: "2rem", textAlign: "center" }}>
-      <h1>AI Image Generator</h1>
+    <div style={{ padding: '20px', fontFamily: 'Arial' }}>
+      <h1>🎨 AI Image Generator</h1>
       <textarea
         value={prompt}
-        onChange={(e) => setPrompt(e.target.value)}
-        placeholder="Enter your image prompt..."
-        rows={4}
-        cols={50}
-        style={{ display: "block", margin: "1rem auto" }}
+        onChange={e => setPrompt(e.target.value)}
+        placeholder="Describe your image..."
+        style={{ width: '100%', height: '100px', marginBottom: '10px' }}
       />
       <button onClick={generateImage} disabled={isLoading}>
-        {isLoading ? "Generating..." : "Generate Image"}
+        {isLoading ? 'Generating...' : '✨ Generate Image'}
       </button>
 
       {imageUrl && (
-        <div style={{ marginTop: "2rem" }}>
-          <h2>Generated Image:</h2>
-          <img
-            src={imageUrl}
-            alt="Generated result"
-            style={{ maxWidth: "100%", borderRadius: "8px" }}
-          />
+        <div style={{ marginTop: '20px' }}>
+          <h3>Generated Image:</h3>
+          <img src={imageUrl} alt="AI Generated" style={{ maxWidth: '100%' }} />
         </div>
       )}
     </div>
   );
 }
+
+export default App;
