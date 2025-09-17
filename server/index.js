@@ -41,8 +41,6 @@ app.post('/api/ai/generate', async (req, res) => {
     console.error('OpenAI Error:', error);
     res.status(500).json({ error: error.message || 'Image generation failed' });
   }
-});
-
-app.listen(PORT, () => {
+});app.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
 });
