@@ -1,0 +1,67 @@
+name: Flutter Android Build & Release
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.22.0'
+
+      - name: Install dependencies
+        run: flutter pub get
+        working-directory: ./photoflix-magic
+
+      - name: Auto-bump build number
+        run: |
+          VERSION=$(grep '^version:' pubspec.yaml | sed 's/version: //;s/+.*//')
+          NEW_VERSION="${VERSION}+${{ github.run_number }}"
+          sed -i "s/^version: .*/version: ${NEW_VERSION}/" pubspec.yaml
+          echo "Updated pubspec.yaml version to ${NEW_VERSION}"
+        working-directory: ./photoflix-magic
+
+      - name: Build APK
+        run: flutter build apk --release
+        working-directory: ./photoflix-magic
+
+      - name: Rename APK with version
+        run: |
+          VERSION=$(grep '^version:' pubspec.yaml | sed 's/version: //')
+          mkdir -p build/output-apk
+          cp build/app/outputs/flutter-apk/app-release.apk build/output-apk/insta_reels_${VERSION}.apk
+        working-directory: ./photoflix-magic
+
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: insta_reels-apk
+          path: photoflix-magic/build/output-apk/*.apk
+
+      - name: Create GitHub Release
+        id: create_release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: "v${{ github.run_number }}"
+          name: "insta_reels_v${{ github.run_number }}"
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload APK to Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: photoflix-magic/build/output-apk/*.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
