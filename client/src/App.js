@@ -10,7 +10,7 @@ function App() {
     setIsLoading(true);
 
     try {
-      const response = await fetch('http://localhost:10000/api/ai/generate', {
+      const response = await fetch('https://photoflix-magic.onrender.com/api/ai/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt })
