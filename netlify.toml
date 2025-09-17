@@ -1,6 +1,4 @@
 [build]
-  command = "cd client && npm run build"
+  base = "client"
+  command = "npm run build"
   publish = "client/build"
-
-[build.environment]
-  NODE_VERSION = "22.19.0"
