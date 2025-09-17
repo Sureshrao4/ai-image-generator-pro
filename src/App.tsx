@@ -1,27 +1,66 @@
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Index from "./pages/Index";
-import NotFound from "./pages/NotFound";
+import { useState } from "react";
 
-const queryClient = new QueryClient();
+export default function Index() {
+  const [prompt, setPrompt] = useState("");
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+  const generateImage = async () => {
+    setIsLoading(true);
+    try {
+      const response = await fetch("/api/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt }),
+      });
 
-export default App;
+      if (!response.ok) {
+        throw new Error(`API request failed with status ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      if (!data.images || data.images.length === 0) {
+        throw new Error("No images returned from API");
+      }
+
+      setImageUrl(data.images[0]);
+    } catch (err) {
+      if (err instanceof Error) {
+        alert("Failed: " + err.message);
+      } else {
+        alert("Failed: " + String(err));
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div style={{ padding: "2rem", textAlign: "center" }}>
+      <h1>AI Image Generator</h1>
+      <textarea
+        value={prompt}
+        onChange={(e) => setPrompt(e.target.value)}
+        placeholder="Enter your image prompt..."
+        rows={4}
+        cols={50}
+        style={{ display: "block", margin: "1rem auto" }}
+      />
+      <button onClick={generateImage} disabled={isLoading}>
+        {isLoading ? "Generating..." : "Generate Image"}
+      </button>
+
+      {imageUrl && (
+        <div style={{ marginTop: "2rem" }}>
+          <h2>Generated Image:</h2>
+          <img
+            src={imageUrl}
+            alt="Generated result"
+            style={{ maxWidth: "100%", borderRadius: "8px" }}
+          />
+        </div>
+      )}
+    </div>
+  );
+}
